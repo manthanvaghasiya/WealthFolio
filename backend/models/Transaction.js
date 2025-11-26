@@ -2,6 +2,11 @@
 const mongoose = require('mongoose');
 
 const TransactionSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId, // This links to the User ID
+    required: true,
+    ref: 'User'
+  },
   title: {
     type: String,
     required: [true, 'Please add a title'],
@@ -9,7 +14,7 @@ const TransactionSchema = new mongoose.Schema({
   },
   amount: {
     type: Number,
-    required: [true, 'Please add a positive or negative number']
+    required: [true, 'Please add a number']
   },
   type: {
     type: String,

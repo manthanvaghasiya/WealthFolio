@@ -3,17 +3,18 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const { protect } = require('./middleware/authMiddleware');
 
-// Load config
 dotenv.config();
-
 const app = express();
 
-// Middleware (Allows us to read JSON and talk to React)
 app.use(express.json());
 app.use(cors());
 
-// Import Model
+// --- ROUTES ---
+app.use('/api/auth', require('./routes/auth')); // <--- NEW AUTH ROUTE
+
+// Import Transaction Model
 const Transaction = require('./models/Transaction');
 
 // --- DATABASE CONNECTION ---
@@ -27,24 +28,52 @@ const connectDB = async () => {
   }
 };
 
-// --- API ROUTES (The Endpoints) ---
-
-// 1. GET all transactions
+// --- TRANSACTION ROUTES (Old routes kept for now) ---
 app.get('/api/transactions', async (req, res) => {
+  const transactions = await Transaction.find().sort({ date: -1 });
+  res.status(200).json(transactions);
+});
+
+app.post('/api/transactions', async (req, res) => {
   try {
-    const transactions = await Transaction.find().sort({ date: -1 }); // Newest first
+    const { title, amount, type, category, date } = req.body;
+    const transaction = await Transaction.create({ title, amount, type, category, date });
+    res.status(201).json(transaction);
+  } catch (err) {
+    res.status(400).json({ error: 'Error adding transaction' });
+  }
+});
+
+app.delete('/api/transactions/:id', async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id);
+    if (!transaction) return res.status(404).json({ error: 'Not found' });
+    await transaction.deleteOne();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
+
+// --- PROTECTED TRANSACTION ROUTES ---
+
+// 1. GET User's Transactions (Only show MY data)
+app.get('/api/transactions', protect, async (req, res) => {
+  try {
+    const transactions = await Transaction.find({ user: req.user.id }).sort({ date: -1 });
     res.status(200).json(transactions);
   } catch (err) {
     res.status(500).json({ error: 'Server Error' });
   }
 });
 
-// 2. ADD a transaction
-app.post('/api/transactions', async (req, res) => {
+// 2. ADD Transaction (Tag it with MY ID)
+app.post('/api/transactions', protect, async (req, res) => {
   try {
     const { title, amount, type, category, date } = req.body;
     
     const transaction = await Transaction.create({
+      user: req.user.id, // <--- Attach User ID
       title,
       amount,
       type,
@@ -54,35 +83,31 @@ app.post('/api/transactions', async (req, res) => {
 
     res.status(201).json(transaction);
   } catch (err) {
-    if(err.name === 'ValidationError') {
-        const messages = Object.values(err.errors).map(val => val.message);
-        return res.status(400).json({ error: messages });
-    }
-    res.status(500).json({ error: 'Server Error' });
+    res.status(400).json({ error: 'Error adding transaction' });
   }
 });
 
-// 3. DELETE a transaction
-app.delete('/api/transactions/:id', async (req, res) => {
+// 3. DELETE Transaction (Check if it's MY data)
+app.delete('/api/transactions/:id', protect, async (req, res) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
 
-    if (!transaction) {
-      return res.status(404).json({ error: 'No transaction found' });
+    if (!transaction) return res.status(404).json({ error: 'Not found' });
+
+    // Ensure user owns the transaction
+    if (transaction.user.toString() !== req.user.id) {
+        return res.status(401).json({ error: 'User not authorized' });
     }
 
     await transaction.deleteOne();
-
-    res.status(200).json({ success: true, message: 'Transaction removed' });
+    res.status(200).json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Server Error' });
   }
 });
 
-// --- START SERVER ---
+// ... (Server listen code remains the same)
 const PORT = process.env.PORT || 5000;
-
-// Connect to DB then start listening
 connectDB().then(() => {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 });

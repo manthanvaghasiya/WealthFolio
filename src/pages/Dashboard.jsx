@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Plus, TrendingUp, TrendingDown, IndianRupee, Trash2, X } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, IndianRupee, Trash2, X, LogOut } from 'lucide-react';
 
 const Dashboard = () => {
   const [transactions, setTransactions] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -15,17 +16,30 @@ const Dashboard = () => {
     type: 'expense'
   });
 
-  // 1. FETCH DATA FROM BACKEND
+  // --- HELPER: Get Token for Requests ---
+  const getHeaders = () => {
+    const token = localStorage.getItem('token');
+    return { headers: { Authorization: `Bearer ${token}` } };
+  };
+
+  // 1. FETCH DATA
   useEffect(() => {
     fetchTransactions();
   }, []);
 
   const fetchTransactions = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/transactions');
+      const res = await axios.get('http://localhost:5000/api/transactions', getHeaders());
       setTransactions(res.data);
+      setLoading(false);
     } catch (err) {
       console.error("Error fetching data", err);
+      // If token is invalid, force logout
+      if(err.response?.status === 401) {
+         localStorage.removeItem('token');
+         window.location.href = '/login';
+      }
+      setLoading(false);
     }
   };
 
@@ -33,10 +47,10 @@ const Dashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/transactions', formData);
-      setShowForm(false); // Close form
-      setFormData({ title: '', amount: '', category: 'Food', type: 'expense' }); // Reset form
-      fetchTransactions(); // Refresh list
+      await axios.post('http://localhost:5000/api/transactions', formData, getHeaders());
+      setShowForm(false);
+      setFormData({ title: '', amount: '', category: 'Food', type: 'expense' });
+      fetchTransactions();
     } catch (err) {
       console.error("Error adding transaction", err);
     }
@@ -45,14 +59,14 @@ const Dashboard = () => {
   // 3. DELETE TRANSACTION
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/transactions/${id}`);
-      fetchTransactions(); // Refresh list
+      await axios.delete(`http://localhost:5000/api/transactions/${id}`, getHeaders());
+      fetchTransactions();
     } catch (err) {
       console.error("Error deleting", err);
     }
   };
 
-  // Calculations
+  // --- CALCULATIONS ---
   const totalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((acc, curr) => acc + curr.amount, 0);
@@ -63,7 +77,7 @@ const Dashboard = () => {
 
   const balance = totalIncome - totalExpense;
 
-  // Chart Data Preparation
+  // Chart Data
   const chartData = transactions
     .filter(t => t.type === 'expense')
     .reduce((acc, curr) => {
@@ -73,10 +87,12 @@ const Dashboard = () => {
       return acc;
     }, []);
 
+  if (loading) return <div className="p-10 text-center text-gray-500">Loading your finance data...</div>;
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8 relative">
       
-      {/* 1. TOP CARDS */}
+      {/* 1. METRICS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-6 rounded-2xl text-white shadow-lg">
           <p className="text-blue-100 text-sm font-medium mb-1">Total Balance</p>
@@ -181,7 +197,7 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* 4. POPUP FORM (Modal) */}
+      {/* 4. POPUP FORM */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl relative">
