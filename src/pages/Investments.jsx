@@ -1,6 +1,7 @@
 import React from 'react';
 import { TrendingUp, PieChart as PieIcon, DollarSign, Briefcase } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { formatCurrency } from '../utils/helpers';
 
 const MOCK_ASSETS = [
   { name: 'Stocks', value: 50000, color: '#4F46E5' },

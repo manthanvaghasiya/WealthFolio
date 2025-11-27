@@ -10,7 +10,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
-
+app.use('/api/habits', require('./routes/habits'));
 // --- ROUTES ---
 app.use('/api/auth', require('./routes/auth'));
 

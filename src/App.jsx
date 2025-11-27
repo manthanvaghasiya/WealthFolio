@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-
+import Habits from './pages/Habits';
 // Layouts
 import MainLayout from './components/layout/MainLayout';
 
@@ -30,6 +30,7 @@ function App() {
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/investments" element={<Investments />} />
           <Route path="/goals" element={<Goals />} />
+          <Route path="/habits" element={<Habits />} />
         </Route>
 
         {/* Catch all 404s -> redirect to Dashboard */}

@@ -56,6 +56,11 @@ const Navbar = () => {
           <Target className="w-4 h-4" />
           Goals
         </Link>
+
+        <Link to="/habits" className={getLinkClass('/habits')}>
+         <CalendarCheck className="w-4 h-4" />
+          Habits
+        </Link>
       </div>
 
       {/* 3. USER PROFILE (Right Side) */}
