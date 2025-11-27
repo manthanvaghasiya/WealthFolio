@@ -10,7 +10,12 @@ const HabitSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please add a habit title']
   },
-  // We store an array of strings like ["2023-11-27", "2023-11-28"]
+  // NEW: The Goal (e.g., 21 days, 30 days)
+  target: {
+    type: Number,
+    default: 21 // Default goal is 21 days if not specified
+  },
+  // Stores completed dates like ["2023-11-27"]
   completedDates: {
     type: [String], 
     default: []

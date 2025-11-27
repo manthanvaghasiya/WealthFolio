@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Wallet, LayoutDashboard, ArrowRightLeft, TrendingUp, Target, LogOut, User } from 'lucide-react';
+import { Wallet, LayoutDashboard, ArrowRightLeft, TrendingUp, Target, CalendarCheck, LogOut, User } from 'lucide-react';
 
 const Navbar = () => {
   const location = useLocation();
