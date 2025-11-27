@@ -33,28 +33,29 @@ const Navbar = () => {
         <span className="text-xl font-bold tracking-tight text-gray-800">WealthFolio</span>
       </Link>
 
-      {/* 2. CENTER MENU (Navigation) */}
+      // Find the "CENTER MENU" section in your existing Navbar.jsx and replace it with this:
+
+      {/* 2. CENTER MENU */}
       <div className="hidden md:flex items-center gap-1">
         <Link to="/" className={getLinkClass('/')}>
           <LayoutDashboard className="w-4 h-4" />
           Dashboard
         </Link>
         
-        {/* These links are visual placeholders for now since we haven't built these pages yet */}
-        <button className="flex items-center gap-2 px-3 py-2 text-gray-400 cursor-not-allowed">
+        <Link to="/transactions" className={getLinkClass('/transactions')}>
           <ArrowRightLeft className="w-4 h-4" />
           Transactions
-        </button>
+        </Link>
         
-        <button className="flex items-center gap-2 px-3 py-2 text-gray-400 cursor-not-allowed">
+        <Link to="/investments" className={getLinkClass('/investments')}>
           <TrendingUp className="w-4 h-4" />
           Investments
-        </button>
+        </Link>
         
-        <button className="flex items-center gap-2 px-3 py-2 text-gray-400 cursor-not-allowed">
+        <Link to="/goals" className={getLinkClass('/goals')}>
           <Target className="w-4 h-4" />
           Goals
-        </button>
+        </Link>
       </div>
 
       {/* 3. USER PROFILE (Right Side) */}
