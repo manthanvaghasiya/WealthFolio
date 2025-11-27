@@ -29,7 +29,7 @@ const Dashboard = () => {
 
   const fetchTransactions = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/transactions', getHeaders());
+      const res = await axios.get('https://wealthfolio-api.onrender.com/api/transactions', getHeaders());
       setTransactions(res.data);
       setLoading(false);
     } catch (err) {
@@ -47,7 +47,7 @@ const Dashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/transactions', formData, getHeaders());
+      await axios.post('https://wealthfolio-api.onrender.com/api/transactions', formData, getHeaders());
       setShowForm(false);
       setFormData({ title: '', amount: '', category: 'Food', type: 'expense' });
       fetchTransactions();
@@ -59,7 +59,7 @@ const Dashboard = () => {
   // 3. DELETE TRANSACTION
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/transactions/${id}`, getHeaders());
+      await axios.delete(`https://wealthfolio-api.onrender.com/api/transactions/${id}`, getHeaders());
       fetchTransactions();
     } catch (err) {
       console.error("Error deleting", err);
