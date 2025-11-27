@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { protect } = require('./middleware/authMiddleware');
+const { protect } = require('./middleware/authMiddleware'); // Security Guard
 
 dotenv.config();
 const app = express();
@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(cors());
 
 // --- ROUTES ---
-app.use('/api/auth', require('./routes/auth')); // <--- NEW AUTH ROUTE
+app.use('/api/auth', require('./routes/auth'));
 
 // Import Transaction Model
 const Transaction = require('./models/Transaction');
@@ -28,36 +28,9 @@ const connectDB = async () => {
   }
 };
 
-// --- TRANSACTION ROUTES (Old routes kept for now) ---
-app.get('/api/transactions', async (req, res) => {
-  const transactions = await Transaction.find().sort({ date: -1 });
-  res.status(200).json(transactions);
-});
+// --- TRANSACTION ROUTES ---
 
-app.post('/api/transactions', async (req, res) => {
-  try {
-    const { title, amount, type, category, date } = req.body;
-    const transaction = await Transaction.create({ title, amount, type, category, date });
-    res.status(201).json(transaction);
-  } catch (err) {
-    res.status(400).json({ error: 'Error adding transaction' });
-  }
-});
-
-app.delete('/api/transactions/:id', async (req, res) => {
-  try {
-    const transaction = await Transaction.findById(req.params.id);
-    if (!transaction) return res.status(404).json({ error: 'Not found' });
-    await transaction.deleteOne();
-    res.status(200).json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Server Error' });
-  }
-});
-
-// --- PROTECTED TRANSACTION ROUTES ---
-
-// 1. GET User's Transactions (Only show MY data)
+// 1. GET User's Transactions
 app.get('/api/transactions', protect, async (req, res) => {
   try {
     const transactions = await Transaction.find({ user: req.user.id }).sort({ date: -1 });
@@ -67,38 +40,58 @@ app.get('/api/transactions', protect, async (req, res) => {
   }
 });
 
-// 2. ADD Transaction (Tag it with MY ID)
+// 2. ADD Transaction
 app.post('/api/transactions', protect, async (req, res) => {
   try {
     const { title, amount, type, category, date } = req.body;
-    
     const transaction = await Transaction.create({
-      user: req.user.id, // <--- Attach User ID
+      user: req.user.id,
       title,
       amount,
       type,
       category,
       date
     });
-
     res.status(201).json(transaction);
   } catch (err) {
     res.status(400).json({ error: 'Error adding transaction' });
   }
 });
 
-// 3. DELETE Transaction (Check if it's MY data)
-app.delete('/api/transactions/:id', protect, async (req, res) => {
+// 3. EDIT Transaction (NEW FEATURE) ✏️
+app.put('/api/transactions/:id', protect, async (req, res) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
 
+    // Check if transaction exists
     if (!transaction) return res.status(404).json({ error: 'Not found' });
 
-    // Ensure user owns the transaction
+    // Check if user owns it
     if (transaction.user.toString() !== req.user.id) {
-        return res.status(401).json({ error: 'User not authorized' });
+      return res.status(401).json({ error: 'Not authorized' });
     }
 
+    // Update
+    const updatedTransaction = await Transaction.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true } // Return the new updated version
+    );
+
+    res.status(200).json(updatedTransaction);
+  } catch (err) {
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
+
+// 4. DELETE Transaction
+app.delete('/api/transactions/:id', protect, async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id);
+    if (!transaction) return res.status(404).json({ error: 'Not found' });
+    if (transaction.user.toString() !== req.user.id) {
+        return res.status(401).json({ error: 'Not authorized' });
+    }
     await transaction.deleteOne();
     res.status(200).json({ success: true });
   } catch (err) {
@@ -106,7 +99,6 @@ app.delete('/api/transactions/:id', protect, async (req, res) => {
   }
 });
 
-// ... (Server listen code remains the same)
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
