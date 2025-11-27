@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../services/api';
-import { Plus, X, Target, Clock, Calendar, Trash2, CheckCircle, Pencil } from 'lucide-react';
-import { formatDate } from '../utils/helpers';
+import { Plus, X, Target, Clock } from 'lucide-react';
+import GoalCard from '../components/goals/GoalCard';
 
 const Goals = () => {
   const [goals, setGoals] = useState([]);
@@ -39,7 +39,7 @@ const Goals = () => {
       closeForm();
     } catch (err) { 
         console.error(err);
-        alert("Error saving goal. Check if Backend is deployed.");
+        alert("Error saving. Please Ensure you pushed Backend code to GitHub.");
     }
   };
 
@@ -66,7 +66,6 @@ const Goals = () => {
     setFormData({ title: '', type: 'Long Term', deadline: '' });
   };
 
-  // Filter Goals
   const longTermGoals = goals.filter(g => g.type === 'Long Term');
   const shortTermGoals = goals.filter(g => g.type === 'Short Term');
 
@@ -81,7 +80,7 @@ const Goals = () => {
             <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <Target className="text-red-500" /> Goals & Deadlines
             </h1>
-            <p className="text-sm text-gray-500">Track your objectives.</p>
+            <p className="text-sm text-gray-500">Track your life objectives.</p>
         </div>
         <button onClick={() => setShowForm(true)} className="bg-black text-white px-5 py-2.5 rounded-xl font-bold hover:bg-gray-800 flex items-center gap-2 shadow-lg">
             <Plus className="w-5 h-5" /> New Goal
@@ -95,7 +94,7 @@ const Goals = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {shortTermGoals.map(goal => (
-                <SimpleGoalCard key={goal._id} goal={goal} handleEdit={handleEdit} handleDelete={handleDelete} color="orange" />
+                <GoalCard key={goal._id} goal={goal} handleEdit={handleEdit} handleDelete={handleDelete} />
             ))}
             {shortTermGoals.length === 0 && <div className="text-gray-400 text-sm italic">No short term goals.</div>}
           </div>
@@ -108,7 +107,7 @@ const Goals = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {longTermGoals.map(goal => (
-                <SimpleGoalCard key={goal._id} goal={goal} handleEdit={handleEdit} handleDelete={handleDelete} color="indigo" />
+                <GoalCard key={goal._id} goal={goal} handleEdit={handleEdit} handleDelete={handleDelete} />
             ))}
             {longTermGoals.length === 0 && <div className="text-gray-400 text-sm italic">No long term goals.</div>}
           </div>
@@ -144,7 +143,7 @@ const Goals = () => {
                             value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
                     </div>
 
-                    {/* Deadline (Now Required for both) */}
+                    {/* Deadline (Required for both now) */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Target Date / Deadline</label>
                         <input type="date" required className="w-full p-2 border border-gray-300 rounded-lg outline-none"
@@ -160,55 +159,6 @@ const Goals = () => {
       )}
     </div>
   );
-};
-
-// --- INTERNAL CARD COMPONENT (No Money, Just Time) ---
-const SimpleGoalCard = ({ goal, handleEdit, handleDelete, color }) => {
-    const today = new Date();
-    const dueDate = new Date(goal.deadline);
-    const diffTime = dueDate - today;
-    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const isOverdue = daysLeft < 0;
-
-    const theme = color === 'orange' ? 'text-orange-500 bg-orange-50' : 'text-indigo-600 bg-indigo-50';
-
-    return (
-        <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-full transition hover:shadow-md">
-            <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-xl ${theme}`}>
-                        {color === 'orange' ? <Clock className="w-6 h-6" /> : <Target className="w-6 h-6" />}
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-gray-800 text-lg leading-tight">{goal.title}</h3>
-                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                            <Calendar className="w-3 h-3" /> Due: {formatDate(goal.deadline)}
-                        </p>
-                    </div>
-                </div>
-                <div className="flex gap-1">
-                    <button onClick={() => handleEdit(goal)} className="p-2 text-gray-400 hover:text-blue-500 rounded-lg"><Pencil className="w-4 h-4" /></button>
-                    <button onClick={() => handleDelete(goal._id)} className="p-2 text-gray-400 hover:text-red-500 rounded-lg"><Trash2 className="w-4 h-4" /></button>
-                </div>
-            </div>
-
-            {/* Time Remaining */}
-            <div className="mb-6">
-                {isOverdue ? (
-                    <span className="text-red-500 font-bold text-sm bg-red-100 px-3 py-1 rounded-full">Overdue by {Math.abs(daysLeft)} days</span>
-                ) : (
-                    <div className="flex flex-col">
-                        <span className="text-3xl font-bold text-gray-800">{daysLeft}</span>
-                        <span className="text-sm text-gray-500">Days Remaining</span>
-                    </div>
-                )}
-            </div>
-
-            <button onClick={() => handleDelete(goal._id)} className="w-full py-2 rounded-xl font-bold flex items-center justify-center gap-2 bg-gray-50 text-gray-600 hover:bg-green-50 hover:text-green-600 border border-gray-100 transition">
-                <CheckCircle className="w-4 h-4" /> Mark as Done
-            </button>
-        </div>
-    );
 };
 
 export default Goals;

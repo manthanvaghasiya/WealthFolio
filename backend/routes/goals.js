@@ -14,20 +14,18 @@ router.get('/', protect, async (req, res) => {
 // 2. ADD GOAL
 router.post('/', protect, async (req, res) => {
   try {
-    const { title, targetAmount, currentAmount, deadline, color } = req.body;
+    const { title, type, deadline } = req.body;
     const goal = await Goal.create({
       user: req.user.id,
       title,
-      targetAmount,
-      currentAmount: currentAmount || 0,
-      deadline,
-      color
+      type,
+      deadline
     });
     res.status(201).json(goal);
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
 
-// 3. UPDATE GOAL (Add Money / Edit Details)
+// 3. UPDATE GOAL
 router.put('/:id', protect, async (req, res) => {
   try {
     const goal = await Goal.findById(req.params.id);
