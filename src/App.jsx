@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import MainLayout from './components/layout/MainLayout'; // Import Layout
+
+// Layouts
+import MainLayout from './components/layout/MainLayout';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -11,22 +13,27 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 
 function App() {
+  // Check if user is logged in
   const isAuthenticated = !!localStorage.getItem('token');
 
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
+        {/* PUBLIC ROUTES (No Navbar) */}
         <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" />} />
         <Route path="/signup" element={!isAuthenticated ? <Signup /> : <Navigate to="/" />} />
 
-        {/* Protected Routes (Wrapped in Layout) */}
+        {/* PROTECTED ROUTES (Wrapped in MainLayout) */}
+        {/* If authenticated, use MainLayout. If not, redirect to Login. */}
         <Route element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/investments" element={<Investments />} />
           <Route path="/goals" element={<Goals />} />
         </Route>
+
+        {/* Catch all 404s -> redirect to Dashboard */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );
