@@ -4,7 +4,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const HabitStats = ({ trendData, donutData, completionRate }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Weekly Trend */}
       <div className="md:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h3 className="font-bold text-gray-700 mb-4">Weekly Trend</h3>
           <div className="h-64 min-h-[250px] w-full">
@@ -19,8 +18,6 @@ const HabitStats = ({ trendData, donutData, completionRate }) => {
               </ResponsiveContainer>
           </div>
       </div>
-
-      {/* Daily Progress */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
           <h3 className="font-bold text-gray-700 mb-4 self-start w-full">Daily Progress</h3>
           <div className="relative w-48 h-48 min-h-[192px]">
@@ -40,5 +37,4 @@ const HabitStats = ({ trendData, donutData, completionRate }) => {
     </div>
   );
 };
-
 export default HabitStats;

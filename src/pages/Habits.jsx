@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import API from '../services/api';
-
-// IMPORT COMPONENTS
 import HabitForm from '../components/habits/HabitForm';
 import HabitStats from '../components/habits/HabitStats';
 import HabitGrid from '../components/habits/HabitGrid';
@@ -11,15 +9,12 @@ import HabitAnalysis from '../components/habits/HabitAnalysis';
 const Habits = () => {
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // State
   const [newHabit, setNewHabit] = useState('');
   const [newTarget, setNewTarget] = useState(21);
   const [editId, setEditId] = useState(null); 
   const [viewDate, setViewDate] = useState(new Date()); 
   const [leaderboardMonth, setLeaderboardMonth] = useState(new Date().toISOString().slice(0, 7)); 
 
-  // --- HELPER: Dates ---
   const getCurrentWeekDays = (referenceDate) => {
     const d = new Date(referenceDate);
     const day = d.getDay(); 
@@ -34,13 +29,10 @@ const Habits = () => {
     }
     return week;
   };
-
   const weekDays = getCurrentWeekDays(viewDate);
   const today = new Date().toISOString().split('T')[0];
 
-  useEffect(() => {
-    fetchHabits();
-  }, []);
+  useEffect(() => { fetchHabits(); }, []);
 
   const fetchHabits = async () => {
     try {
@@ -55,13 +47,10 @@ const Habits = () => {
     if (!newHabit.trim()) return;
     try {
       if (editId) {
-        // UPDATE Logic
         const res = await API.put(`/habits/${editId}`, { title: newHabit, target: Number(newTarget) });
-        // Update local state immediately (Fix for "Not Saving" issue)
         setHabits(prev => prev.map(h => h._id === editId ? res.data : h));
         setEditId(null); 
       } else {
-        // ADD Logic
         const res = await API.post('/habits', { title: newHabit, target: Number(newTarget) });
         setHabits(prev => [res.data, ...prev]);
       }
@@ -73,7 +62,6 @@ const Habits = () => {
     setNewHabit(habit.title); setNewTarget(habit.target || 21); setEditId(habit._id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
   const cancelEdit = () => { setEditId(null); setNewHabit(''); setNewTarget(21); };
 
   const toggleHabitDate = async (id, date) => {
@@ -88,17 +76,12 @@ const Habits = () => {
     try { await API.delete(`/habits/${id}`); setHabits(prev => prev.filter(h => h._id !== id)); } catch (err) {}
   };
 
-  const handlePrevWeek = () => {
-    const newDate = new Date(viewDate); newDate.setDate(viewDate.getDate() - 7); setViewDate(newDate);
-  };
-  const handleNextWeek = () => {
-    const newDate = new Date(viewDate); newDate.setDate(viewDate.getDate() + 7); setViewDate(newDate);
-  };
+  const handlePrevWeek = () => { const newDate = new Date(viewDate); newDate.setDate(viewDate.getDate() - 7); setViewDate(newDate); };
+  const handleNextWeek = () => { const newDate = new Date(viewDate); newDate.setDate(viewDate.getDate() + 7); setViewDate(newDate); };
 
-  // --- DATA CALCULATIONS ---
+  // CALCS
   const completedToday = habits.filter(h => h.completedDates.includes(today)).length;
   const completionRate = habits.length === 0 ? 0 : Math.round((completedToday / habits.length) * 100);
-  
   const donutData = [ { name: 'Done', value: completedToday, color: '#10B981' }, { name: 'Left', value: habits.length - completedToday, color: '#E5E7EB' } ];
   const trendData = weekDays.map(date => ({ name: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }), completed: habits.filter(h => h.completedDates.includes(date)).length }));
 
@@ -118,9 +101,7 @@ const Habits = () => {
   });
   const avgDailyConsistency = monthlyStats.length === 0 ? 0 : Math.round(monthlyStats.reduce((acc, curr) => acc + curr.percent, 0) / monthlyStats.length);
 
-  const topHabitsMonthly = habits.map(habit => ({
-      ...habit, monthlyCount: habit.completedDates.filter(d => d.startsWith(leaderboardMonth)).length
-  })).sort((a, b) => b.monthlyCount - a.monthlyCount).slice(0, 10);
+  const topHabitsMonthly = habits.map(habit => ({ ...habit, monthlyCount: habit.completedDates.filter(d => d.startsWith(leaderboardMonth)).length })).sort((a, b) => b.monthlyCount - a.monthlyCount).slice(0, 10);
 
   const currentMonthStr = new Date().toISOString().slice(0, 7); 
   const prevDateObj = new Date(); prevDateObj.setMonth(prevDateObj.getMonth() - 1);
@@ -136,25 +117,12 @@ const Habits = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
-      <HabitForm 
-        handleSubmit={handleSubmit} newHabit={newHabit} setNewHabit={setNewHabit}
-        newTarget={newTarget} setNewTarget={setNewTarget} editId={editId} cancelEdit={cancelEdit}
-      />
+      <HabitForm handleSubmit={handleSubmit} newHabit={newHabit} setNewHabit={setNewHabit} newTarget={newTarget} setNewTarget={setNewTarget} editId={editId} cancelEdit={cancelEdit} />
       <HabitStats trendData={trendData} donutData={donutData} completionRate={completionRate} />
-      <HabitGrid 
-        habits={habits} weekDays={weekDays} today={today} 
-        handlePrevWeek={handlePrevWeek} handleNextWeek={handleNextWeek} 
-        toggleHabitDate={toggleHabitDate} handleEdit={handleEdit} deleteHabit={deleteHabit} 
-      />
-      <HabitMonthlyOverview 
-        leaderboardMonth={leaderboardMonth} setLeaderboardMonth={setLeaderboardMonth} 
-        monthlyStats={monthlyStats} activeHabitsCount={habits.length} avgDailyConsistency={avgDailyConsistency} 
-      />
-      <HabitAnalysis 
-        topHabitsMonthly={topHabitsMonthly} auditData={auditData} daysInLeaderboardMonth={selectedMonthDays.length} 
-      />
+      <HabitGrid habits={habits} weekDays={weekDays} today={today} handlePrevWeek={handlePrevWeek} handleNextWeek={handleNextWeek} toggleHabitDate={toggleHabitDate} handleEdit={handleEdit} deleteHabit={deleteHabit} />
+      <HabitMonthlyOverview leaderboardMonth={leaderboardMonth} setLeaderboardMonth={setLeaderboardMonth} monthlyStats={monthlyStats} activeHabitsCount={habits.length} avgDailyConsistency={avgDailyConsistency} />
+      <HabitAnalysis topHabitsMonthly={topHabitsMonthly} auditData={auditData} daysInLeaderboardMonth={selectedMonthDays.length} />
     </div>
   );
 };
-
 export default Habits;

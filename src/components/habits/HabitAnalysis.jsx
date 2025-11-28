@@ -4,14 +4,8 @@ import { Trophy, AlertCircle, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 const HabitAnalysis = ({ topHabitsMonthly, auditData, daysInLeaderboardMonth }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* LEFT: LEADERBOARD (Layout Fixed) */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
-            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" /> Monthly Top 10
-            </h3>
-            
-            {/* Added: flex-1, flex, flex-col, justify-between to stretch items */}
+            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2"><Trophy className="w-5 h-5 text-yellow-500" /> Monthly Top 10</h3>
             <div className="space-y-4 flex-1 flex flex-col justify-between">
               {topHabitsMonthly.map((habit, index) => {
                   const consistency = Math.round((habit.monthlyCount / daysInLeaderboardMonth) * 100); 
@@ -30,12 +24,8 @@ const HabitAnalysis = ({ topHabitsMonthly, auditData, daysInLeaderboardMonth }) 
               {topHabitsMonthly.length === 0 && <div className="text-center py-10 text-gray-400">No data available for this month.</div>}
             </div>
         </div>
-
-        {/* RIGHT: PERFORMANCE AUDIT */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
-            <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-6">
-                <AlertCircle className="w-5 h-5 text-purple-600" /> Action Required (Top 10 Declines)
-            </h3>
+            <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-6"><AlertCircle className="w-5 h-5 text-purple-600" /> Action Required (Top 10 Declines)</h3>
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-left border-collapse">
                   <thead>
@@ -62,9 +52,7 @@ const HabitAnalysis = ({ topHabitsMonthly, auditData, daysInLeaderboardMonth }) 
                               </tr>
                           );
                       })}
-                      {auditData.length === 0 && (
-                          <tr><td colSpan="4" className="text-center py-10 text-gray-400">No performance data yet.</td></tr>
-                      )}
+                      {auditData.length === 0 && <tr><td colSpan="4" className="text-center py-10 text-gray-400">No performance data yet.</td></tr>}
                   </tbody>
               </table>
             </div>
@@ -72,5 +60,4 @@ const HabitAnalysis = ({ topHabitsMonthly, auditData, daysInLeaderboardMonth }) 
     </div>
   );
 };
-
 export default HabitAnalysis;
