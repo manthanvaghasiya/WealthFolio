@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import API from '../services/api';
 import { Plus, IndianRupee, Pencil, Trash2, ArrowRightLeft, X, TrendingUp, Wallet } from 'lucide-react';
-import DashboardSkeleton from '../components/skeletons/DashboardSkeleton';
-// Import BOTH Charts
+
+// Import Components
 import ExpenseBreakdown from '../components/dashboard/ExpenseBreakdown';
 import FinancialAnalytics from '../components/dashboard/FinancialAnalytics';
+import DashboardSkeleton from '../components/skeletons/DashboardSkeleton'; // Ensure you have this
 
 const DEFAULT_CATEGORIES = ['Food', 'Travel', 'Bills', 'Entertainment', 'Salary', 'Shopping', 'Health', 'Education', 'Investment'];
 
@@ -18,7 +19,7 @@ const Dashboard = () => {
   const [formData, setFormData] = useState({ title: '', amount: '', category: 'Food', type: 'expense' });
   const [customCategory, setCustomCategory] = useState('');
   
-  // Custom Transaction Type State (Income / Expense / Investment)
+  // Custom Transaction Type State
   const [txType, setTxType] = useState('expense'); 
 
   useEffect(() => { fetchTransactions(); }, []);
@@ -31,22 +32,30 @@ const Dashboard = () => {
     } catch (err) { console.error(err); setLoading(false); }
   };
 
+  // --- DYNAMIC CATEGORY LOGIC (The Fix) ---
+  // 1. Get all categories currently used in your database
+  const usedCategories = transactions.map(t => t.category);
+  // 2. Merge Defaults + Used, remove duplicates using Set
+  const availableCategories = [...new Set([...DEFAULT_CATEGORIES, ...usedCategories])];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Logic: If user selects "Investment", we save it as Expense but Category = "Investment"
     let finalType = txType;
     let finalCategory = formData.category;
 
     if (txType === 'investment') {
         finalType = 'expense';
         finalCategory = 'Investment';
+    } else if (finalCategory === 'Other') {
+        // Use the manual input
+        finalCategory = customCategory; 
     }
 
     const dataToSend = { 
         ...formData, 
         type: finalType,
-        category: finalCategory === 'Other' ? customCategory : finalCategory
+        category: finalCategory
     };
 
     try {
@@ -71,14 +80,16 @@ const Dashboard = () => {
 
   const handleEdit = (t) => {
     setEditId(t._id);
-    const isStandard = DEFAULT_CATEGORIES.includes(t.category);
     
-    // Determine UI Type
+    // Check if category is in our dynamic list
+    const isStandard = availableCategories.includes(t.category);
+    
     let uiType = t.type;
     if (t.category === 'Investment') uiType = 'investment';
 
     setTxType(uiType);
     setFormData({ title: t.title, amount: t.amount, category: isStandard ? t.category : 'Other', type: t.type });
+    
     if (!isStandard) setCustomCategory(t.category);
     setShowForm(true);
   };
@@ -93,19 +104,17 @@ const Dashboard = () => {
   // --- SMART CALCULATIONS ---
   const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, c) => acc + c.amount, 0);
   
-  // 1. Calculate Investments (Expenses categorized as Investment)
   const totalInvested = transactions
     .filter(t => t.type === 'expense' && t.category === 'Investment')
     .reduce((acc, c) => acc + c.amount, 0);
 
-  // 2. Calculate Real Expenses (Total Expenses MINUS Investments)
-  // This prevents your "Expense" number from looking huge when you buy stocks.
   const totalExpensesRaw = transactions.filter(t => t.type === 'expense').reduce((acc, c) => acc + c.amount, 0);
   const totalRealExpenses = totalExpensesRaw - totalInvested;
 
   const balance = totalIncome - totalExpensesRaw;
 
   if (loading) return <DashboardSkeleton />;
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8 relative">
       
@@ -120,28 +129,20 @@ const Dashboard = () => {
         </button>
       </div>
 
-      {/* 2. SUMMARY CARDS (4 Cards) */}
+      {/* 2. SUMMARY CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* Balance */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-6 rounded-2xl text-white shadow-lg">
           <p className="text-blue-100 text-sm font-medium mb-1">Total Balance</p>
           <h2 className="text-3xl font-bold flex items-center"><IndianRupee className="w-6 h-6 mr-1" /> {balance}</h2>
         </div>
-
-        {/* Income */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <p className="text-gray-500 text-sm mb-1">Total Income</p>
           <h2 className="text-2xl font-bold text-green-600 flex items-center">+ <IndianRupee className="w-5 h-5" /> {totalIncome}</h2>
         </div>
-
-        {/* Expenses */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <p className="text-gray-500 text-sm mb-1">Total Expenses</p>
           <h2 className="text-2xl font-bold text-red-600 flex items-center">- <IndianRupee className="w-5 h-5" /> {totalRealExpenses}</h2>
         </div>
-
-        {/* Investments */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-start">
              <div>
@@ -157,15 +158,11 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* 3. CHARTS SECTION (Both Charts!) */}
+      {/* 3. CHARTS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left: Financial Analytics (Area Chart) */}
         <div className="lg:col-span-2 h-full">
             <FinancialAnalytics transactions={transactions} />
         </div>
-
-        {/* Right: Expense Breakdown (Donut Chart) - RESTORED */}
         <div className="lg:col-span-1 h-full">
             <ExpenseBreakdown transactions={transactions} />
         </div>
@@ -203,7 +200,7 @@ const Dashboard = () => {
         </ul>
       </div>
 
-      {/* FORM MODAL (With Investment Option) */}
+      {/* FORM MODAL */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl relative">
@@ -232,15 +229,19 @@ const Dashboard = () => {
                         </div>
                     </div>
                     
-                    {/* Hide Category if Investment is selected (Auto-set) */}
+                    {/* DYNAMIC CATEGORY DROPDOWN */}
                     {txType !== 'investment' && (
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                             <select className="w-full p-2 border border-gray-300 rounded-lg outline-none mb-2" 
                                 value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}>
-                                {DEFAULT_CATEGORIES.filter(c => c !== 'Investment').map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                {/* Map over AVAILABLE categories (Defaults + History) */}
+                                {availableCategories.filter(c => c !== 'Investment').map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
                                 <option value="Other">Other (Type manually)</option>
                             </select>
+                            
                             {formData.category === 'Other' && (
                                 <input type="text" placeholder="Type custom category..." required className="w-full p-2 border border-blue-300 bg-blue-50 rounded-lg outline-none"
                                     value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} />
