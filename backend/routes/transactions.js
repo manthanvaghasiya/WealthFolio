@@ -18,12 +18,11 @@ router.get('/', protect, async (req, res) => {
 // 2. ADD TRANSACTION
 router.post('/', protect, async (req, res) => {
   try {
-    console.log('👉 ADD REQUEST RECEIVED:', req.body);
-
     const { title, amount, type, category, date, paymentMode } = req.body;
 
-    if (!['Cash', 'Bank'].includes(paymentMode)) {
-      return res.status(400).json({ message: 'paymentMode must be Cash or Bank' });
+    // Validation: Ensure valid mode
+    if (!['Cash', 'Bank', 'Investment'].includes(paymentMode)) {
+      return res.status(400).json({ message: 'Invalid Payment Mode' });
     }
 
     const transaction = await Transaction.create({
@@ -33,13 +32,11 @@ router.post('/', protect, async (req, res) => {
       type,
       category,
       date: date || Date.now(),
-      paymentMode             // ✅ exactly what frontend sends
+      paymentMode
     });
 
-    console.log('✅ SAVED TRANSACTION:', transaction);
     res.status(201).json(transaction);
   } catch (err) {
-    console.error(err);
     res.status(400).json({ message: 'Error adding transaction' });
   }
 });
@@ -47,35 +44,18 @@ router.post('/', protect, async (req, res) => {
 // 3. UPDATE TRANSACTION
 router.put('/:id', protect, async (req, res) => {
   try {
-    console.log('👉 UPDATE REQUEST RECEIVED:', req.body);
-
     const existing = await Transaction.findById(req.params.id);
     if (!existing) return res.status(404).json({ message: 'Not found' });
-    if (existing.user.toString() !== req.user.id) {
-      return res.status(401).json({ message: 'Not authorized' });
-    }
-
-    if (!['Cash', 'Bank'].includes(req.body.paymentMode)) {
-      return res.status(400).json({ message: 'paymentMode must be Cash or Bank' });
-    }
+    if (existing.user.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
 
     const updated = await Transaction.findByIdAndUpdate(
       req.params.id,
-      {
-        title: req.body.title,
-        amount: req.body.amount,
-        type: req.body.type,
-        category: req.body.category,
-        date: req.body.date,
-        paymentMode: req.body.paymentMode   // ✅ no default
-      },
+      req.body,
       { new: true }
     );
 
-    console.log('✅ UPDATED TRANSACTION:', updated);
     res.json(updated);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: err.message });
   }
 });
@@ -85,9 +65,7 @@ router.delete('/:id', protect, async (req, res) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
     if (!transaction) return res.status(404).json({ message: 'Not found' });
-    if (transaction.user.toString() !== req.user.id) {
-      return res.status(401).json({ message: 'Not authorized' });
-    }
+    if (transaction.user.toString() !== req.user.id) return res.status(401).json({ message: 'Not authorized' });
 
     await transaction.deleteOne();
     res.json({ success: true });

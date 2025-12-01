@@ -1,29 +1,54 @@
 import React from 'react';
-import { Plus, Save, X } from 'lucide-react';
+import { Plus, Save, X, Target } from 'lucide-react';
 
 const HabitForm = ({ handleSubmit, newHabit, setNewHabit, newTarget, setNewTarget, editId, cancelEdit }) => {
   return (
-    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-      <div>
-         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">Habit Analytics</h1>
-         <p className="text-sm text-gray-500">Track your goals and progress.</p>
-      </div>
-      <form onSubmit={handleSubmit} className={`flex gap-2 w-full md:w-auto p-2 rounded-xl shadow-sm border ${editId ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-gray-100'}`}>
-          <input type="text" placeholder="Habit Name..." className="p-2 border-none outline-none focus:ring-0 w-full md:w-64 bg-transparent"
-            value={newHabit} onChange={(e) => setNewHabit(e.target.value)} />
-          <div className="flex items-center border-l border-gray-300 pl-2 gap-1">
-              <span className="text-xs text-gray-500 font-bold">GOAL:</span>
-              <input type="number" placeholder="21" className="w-12 p-1 border border-gray-200 rounded text-center outline-none"
-                value={newTarget} onChange={(e) => setNewTarget(e.target.value)} />
+    <form onSubmit={handleSubmit} className="relative z-10">
+      <div className="space-y-4">
+          
+          {/* Input Field */}
+          <div className="group relative">
+            <input 
+                type="text" 
+                placeholder="e.g., Read 10 pages..." 
+                className="w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm font-medium rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all placeholder-gray-400"
+                value={newHabit} 
+                onChange={(e) => setNewHabit(e.target.value)} 
+            />
           </div>
-          <button type="submit" className={`px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 text-white ${editId ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-black hover:bg-gray-800'}`}>
-              {editId ? <Save className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-          </button>
-          {editId && (
-              <button type="button" onClick={cancelEdit} className="text-gray-500 hover:text-red-500 px-2"><X className="w-5 h-5" /></button>
-          )}
-      </form>
-    </div>
+
+          {/* Target & Button Row */}
+          <div className="flex gap-3">
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl flex-1">
+                  <Target className="w-4 h-4 text-gray-400" />
+                  <input 
+                    type="number" 
+                    placeholder="21" 
+                    className="w-full bg-transparent text-sm font-bold text-gray-700 outline-none"
+                    value={newTarget} 
+                    onChange={(e) => setNewTarget(e.target.value)} 
+                  />
+                  <span className="text-xs text-gray-400 font-medium">days</span>
+              </div>
+
+              <button 
+                type="submit" 
+                className={`px-5 py-2 rounded-xl font-bold text-white shadow-lg transition-transform transform active:scale-95 flex items-center gap-2
+                    ${editId ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-200' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'}
+                `}
+              >
+                  {editId ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  {editId ? 'Update' : 'Add'}
+              </button>
+              
+              {editId && (
+                  <button type="button" onClick={cancelEdit} className="p-2.5 text-gray-400 hover:text-red-500 bg-gray-50 rounded-xl transition">
+                      <X className="w-5 h-5" />
+                  </button>
+              )}
+          </div>
+      </div>
+    </form>
   );
 };
 export default HabitForm;
